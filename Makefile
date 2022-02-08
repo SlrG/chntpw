@@ -66,9 +66,9 @@ sampasswd.static: sampasswd.o ntreg.o libsam.o
 	$(CC) -c $(CFLAGS) $<
 
 mvbf:
-	mkdir build
+	mkdir -p build
 	mv -f -t build/ *.o chntpw chntpw.static cpnt reged reged.static samusrgrp samusrgrp.static sampasswd sampasswd.static
 
 clean:
 	rm -f *.o chntpw chntpw.static cpnt reged reged.static samusrgrp samusrgrp.static sampasswd sampasswd.static *~
-
+	rm -rf build/
