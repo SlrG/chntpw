@@ -26,7 +26,7 @@ OSSLLIB=$(OSSLPATH)/lib
 LIBS=-L$(OSSLLIB)
 
 
-all: chntpw chntpw.static cpnt reged reged.static samusrgrp samusrgrp.static sampasswd sampasswd.static
+all: chntpw chntpw.static cpnt reged reged.static samusrgrp samusrgrp.static sampasswd sampasswd.static mvbf
 
 chntpw: chntpw.o ntreg.o edlib.o libsam.o
 	$(CC) $(CFLAGS) -o chntpw chntpw.o ntreg.o edlib.o libsam.o $(LIBS)
@@ -64,6 +64,10 @@ sampasswd.static: sampasswd.o ntreg.o libsam.o
 
 .c.o:
 	$(CC) -c $(CFLAGS) $<
+
+mvbf:
+	mkdir build
+	mv -f -t build/ *.o chntpw chntpw.static cpnt reged reged.static samusrgrp samusrgrp.static sampasswd sampasswd.static
 
 clean:
 	rm -f *.o chntpw chntpw.static cpnt reged reged.static samusrgrp samusrgrp.static sampasswd sampasswd.static *~
