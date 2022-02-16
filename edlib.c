@@ -296,6 +296,12 @@ void edit_val(struct hive *h, int nkofs, char *path)
     break;
   case REG_SZ:
   case REG_EXPAND_SZ:
+    if (len > SZ_MAX-1) {
+        printf ("\nWarning, the value size is %d characters above the limit of %d characters!\n", len-SZ_MAX, SZ_MAX-1);
+        printf ("\nYou risk loosing data when editing such long values with the normal editing");
+        printf ("\nmode. Be sure to abort and use the import functionality or the non-canonical");
+        printf ("\ninput mode 'en' instead, if the new value has to exceed the limit, too.\n");
+    }
   case REG_MULTI_SZ:
     newstring = NULL;
     dbuf = (char *)&kv->data;
