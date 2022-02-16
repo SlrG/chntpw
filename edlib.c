@@ -313,8 +313,8 @@ void edit_val(struct hive *h, int nkofs, char *path)
       n++;
     }
 
-    printf("\nNow enter new strings, one by one.\n");
-    printf("Enter nothing to keep old.\n");
+    printf("\nNow enter new strings, one by one. (Maximum size is %d characters!)\n", SZ_MAX-1);
+    printf("\nEnter nothing to keep old.\n");
     if (type == REG_MULTI_SZ) {
       printf("'--n' to quit (remove rest of strings)\n");
       printf("'--i' insert new string at this point\n");
@@ -330,7 +330,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
 
       printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
       if (insert) insert++;
-      if (!go) fmyinput("-> ",inbuf, 500);
+      if (!go) fmyinput("-> ",inbuf, SZ_MAX);
       else *inbuf = 0;
       if (*inbuf && strcmp("--q", inbuf)) {
 	if (!strcmp("--n", inbuf) || !strcmp("--Q", inbuf)) { /* Zap rest */
