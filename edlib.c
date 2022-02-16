@@ -314,14 +314,16 @@ void edit_val(struct hive *h, int nkofs, char *path)
     }
 
     printf("\nNow enter new strings, one by one. (Maximum size is %d characters!)\n", SZ_MAX-1);
-    printf("\nEnter nothing to keep old.\n");
+    printf("\nEnter nothing to keep old");
     if (type == REG_MULTI_SZ) {
+      printf(" or:\n");
       printf("'--n' to quit (remove rest of strings)\n");
       printf("'--i' insert new string at this point\n");
       printf("'--q' to quit (leaving remaining strings as is)\n");
       printf("'--Q' to quit and discard all changes\n");
-      printf("'--e' for empty string in this position\n");
+      printf("'--e' for empty string in this position");
     }
+    printf(".\n\n");
     n = 0; i = 0; in = 0; go = 0; done = 0;
 
     /* Now this one is RATHER UGLY :-} */
