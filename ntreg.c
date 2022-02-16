@@ -3499,7 +3499,7 @@ void export_key(struct hive *hdesc, int nkofs, char *name, char *filename, char 
 
 /* Import from .reg file routines */
 
-#define MAXLINE 20000
+#define MAXLINE 256000
 
 /* Wide character fgetsw() may not be available on all small libraries..
  * so.. roll our own fgets() that handles wide if needed
