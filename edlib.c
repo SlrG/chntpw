@@ -262,7 +262,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
   struct keyval *kv, *newkv;
   int type,len,n,i,in,go, newsize, d = 0, done, insert = 0;
   char inbuf[SZ_MAX+4];
-  char origstring[SZ_MAX+4];
+  char *origstring;
   char *newstring;
   char *dbuf;
 
@@ -305,6 +305,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
   case REG_MULTI_SZ:
     newstring = NULL;
     dbuf = (char *)&kv->data;
+    origstring = malloc (len+4);
     cheap_uni2ascii(dbuf,origstring,len);
     n = 0; i = 0;
     while (i < (len>>1)-1) {
@@ -313,7 +314,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
       n++;
     }
 
-    printf("\nNow enter new strings, one by one. (Maximum size is %d characters!)\n", SZ_MAX-1);
+    printf("\nNow enter new strings, one by one. (Maximum size per string is %d characters!)\n", SZ_MAX-1);
     printf("\nEnter nothing to keep old");
     if (type == REG_MULTI_SZ) {
       printf(" or:\n");
