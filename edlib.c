@@ -217,6 +217,7 @@ void cat_vk(struct hive *hdesc, int nkofs, char *path, int dohex)
   }
 #endif
 
+  printf ("\n\n");
   kv = get_val2buf(hdesc, NULL, nkofs, path, 0, TPF_VK);
 
   if (!kv) {
@@ -269,6 +270,7 @@ void ncedit_val(struct hive *h, int nkofs, char *path)
   char *newstring;
   char *dbuf;
 
+  printf ("\n\n");
   type = get_val_type(h, nkofs, path, TPF_VK);
   if (type == -1) {
     printf("Value <%s> not found!\n",path);
@@ -415,6 +417,7 @@ void ncedit_val(struct hive *h, int nkofs, char *path)
   }
 
   if (d) {
+    printf ("\n");
     if (!(put_buf2val(h, kv, nkofs, path, type, TPF_VK))) {
       printf("Failed to set value!?\n");
     }
@@ -435,6 +438,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
   char *newstring;
   char *dbuf;
 
+  printf ("\n\n");
   type = get_val_type(h, nkofs, path, TPF_VK);
   if (type == -1) {
     printf("Value <%s> not found!\n",path);
@@ -590,6 +594,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
   }
 
   if (d) {
+    printf ("\n");
     if (!(put_buf2val(h, kv, nkofs, path, type, TPF_VK))) {
       printf("Failed to set value!?\n");
     }
