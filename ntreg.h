@@ -25,9 +25,10 @@
 #ifndef _INCLUDE_NTREG_H
 #define _INCLUDE_NTREG_H 1
 
-#define SZ_MAX     4096       /* Max unicode strlen before we truncate */
+#define SZ_MAX     4096       /* Max unicode strlen in tty before we truncate */
+#define SZ_PIPE    65536      /* Max unicode strlen in pipe before we truncate */
 
-#define KEY_ROOT   0x2c         /* Type ID of ROOT key node */
+#define KEY_ROOT   0x2c       /* Type ID of ROOT key node */
 #define KEY_NORMAL 0x20       /* Normal nk key */
 
 #define ABSPATHLEN 4096

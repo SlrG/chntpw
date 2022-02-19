@@ -236,8 +236,10 @@ int fmyncinput(char *prmpt, char *ibuf)
    struct termios tty_opts_backup, tty_opts_raw;
 
    if (!isatty(STDIN_FILENO)) {
-     printf("Error: stdin is not a TTY\n");
-     exit(1);
+     printf("Error: stdin is not a TTY!\n");
+     printf("\nYou can't use non-canonical input mode without it. Please use the normal mode instead.\n");
+     ibuf[strlen(ibuf)+1] = 0;
+     return(strlen(ibuf));
    }
 
    // backup TTY settings

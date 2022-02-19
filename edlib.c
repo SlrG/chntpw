@@ -56,6 +56,7 @@ const char edlib_version[] = "edlib version 0.1 140201, (c) Petter N Hagen";
 #define ADDBIN_DEBUG 0     /* Reg expansion debug hooks */
 
 extern char *val_types[REG_MAX+1];
+int sz_size=SZ_MAX;
 
 struct cmds {
   char cmd_str[12];
@@ -433,7 +434,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
 {
   struct keyval *kv, *newkv;
   int type,len,n,i,in,go, newsize, d = 0, done, insert = 0;
-  char inbuf[SZ_MAX+4];
+  char inbuf[sz_size+4];
   char *origstring;
   char *newstring;
   char *dbuf;
@@ -469,8 +470,8 @@ void edit_val(struct hive *h, int nkofs, char *path)
     break;
   case REG_SZ:
   case REG_EXPAND_SZ:
-    if (len > SZ_MAX-1) {
-        printf ("\nWarning, the value size is %d characters above the limit of %d characters!\n", len-SZ_MAX, SZ_MAX-1);
+    if (len > sz_size-1) {
+        printf ("\nWarning, the value size is %d characters above the limit of %d characters!\n", len-sz_size, sz_size-1);
         printf ("\nYou risk loosing data when editing such long values with the normal editing");
         printf ("\nmode. Be sure to abort and use the import functionality or the non-canonical");
         printf ("\ninput mode 'en' instead, if the new value has to exceed the limit, too.\n");
@@ -491,7 +492,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
       n++;
     }
 
-    printf("\nNow enter new strings, one by one. (Maximum size per string is %d characters!)\n", SZ_MAX-1);
+    printf("\nNow enter new strings, one by one. (Maximum size per string is %d characters!)\n", sz_size-1);
     printf("\nEnter nothing to keep old");
     if (type == REG_MULTI_SZ) {
       printf(" or:\n");
@@ -513,7 +514,7 @@ void edit_val(struct hive *h, int nkofs, char *path)
       }
       //printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
       if (insert) insert++;
-      if (!go) fmyinput("-> ",inbuf, SZ_MAX);
+      if (!go) fmyinput("-> ",inbuf, sz_size);
       else *inbuf = 0;
       if (*inbuf && strcmp("--q", inbuf)) {
 	if (!strcmp("--n", inbuf) || !strcmp("--Q", inbuf)) { /* Zap rest */
@@ -669,6 +670,19 @@ void regedit_interactive(struct hive *hive[], int no_hives)
 
   printf("Simple registry editor. ? for help.\n");
 
+  if (isatty(fileno(stdin)))
+  {
+    // printf( "\nstdin is a terminal\n" );
+    // canonical terminal mode restriction applies
+    sz_size=SZ_MAX;
+  }
+  else
+  {
+    // printf( "\nstdin is a file or a pipe\n");
+    // canonical terminal mode restriction applies
+    sz_size=SZ_PIPE;
+  }
+
   while (1) {
     // cdkey = (struct nk_key *)(hdesc->buffer + cdofs);
 
@@ -701,7 +715,7 @@ void regedit_interactive(struct hive *hive[], int no_hives)
 	printf("nk <keyname>           - add key\n");
 	printf("dk <keyname>           - delete key (must be empty)\n");
 	printf("ed <value>             - Edit value\n");
-	printf("en <value>             - Edit value in non-canonical mode (>%d characters)\n", SZ_MAX-1);
+	printf("en <value>             - Edit value in non-canonical mode (>%d characters)\n", sz_size-1);
 	printf("nv <type#> <valuename> - Add value\n");
 	printf("dv <valuename>         - Delete value\n");
 	printf("delallv                - Delete all values in current key\n");
