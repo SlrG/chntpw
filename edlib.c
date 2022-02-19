@@ -84,6 +84,8 @@ struct cmds {
 #define MCMD_CK 20
 #define MCMD_CAT_DPI 21
 #define MCMD_ADDBIN 22
+#define MCMD_NCEDIT 23
+
 
 struct cmds maincmds[] = {
  { "cd" , MCMD_CD } ,
@@ -96,6 +98,7 @@ struct cmds maincmds[] = {
  { "debug", MCMD_DEBUG } ,
  { "hive", MCMD_HIVE } ,
  { "ed", MCMD_EDIT } ,
+ { "en", MCMD_NCEDIT } ,
 #if ALLOC_DEBUG
  { "alloc", MCMD_ALLOC } ,
  { "free", MCMD_FREE } ,
@@ -251,6 +254,164 @@ void cat_vk(struct hive *hdesc, int nkofs, char *path, int dohex)
   putchar('\n');
   FREE(kv);
 
+}
+
+/* Edit value in Non-Canonical mode: Invoke whatever is needed to edit it
+ * based on its type
+ */
+
+void ncedit_val(struct hive *h, int nkofs, char *path)
+{
+  struct keyval *kv, *newkv;
+  int type,len,n,i,in,go, newsize, d = 0, done, insert = 0;
+  char inbuf[256000];
+  char *origstring;
+  char *newstring;
+  char *dbuf;
+
+  type = get_val_type(h, nkofs, path, TPF_VK);
+  if (type == -1) {
+    printf("Value <%s> not found!\n",path);
+    return;
+  }
+
+  kv = get_val2buf(h, NULL, nkofs, path, type, TPF_VK);
+  if (!kv) {
+    printf("Unable to get data of value <%s>\n",path);
+    return;
+  }
+  len = kv->len;
+
+  printf("EDIT: <%s> of type %s (%x) with length %d [0x%x]\n", path,
+	 (type < REG_MAX ? val_types[type] : "(unknown)"), type,
+	 len, len);
+
+  switch(type) {
+  case REG_DWORD:
+    printf ("\nNon-canonical mode is not allowed for DWORD values");
+    printf ("\nPlease use the normal editing mode!");
+    break;
+  case REG_SZ:
+  case REG_EXPAND_SZ:
+  case REG_MULTI_SZ:
+    newstring = NULL;
+    dbuf = (char *)&kv->data;
+    origstring = malloc (len+4);
+    cheap_uni2ascii(dbuf,origstring,len);
+    n = 0; i = 0;
+    while (i < (len>>1)-1) {
+      printf("[%2d]: %s\n",n,origstring+i);
+      i += strlen(origstring+i) + 1;
+      n++;
+    }
+
+    printf("\nNow enter new strings, one by one. Be aware, that in non-canonical mode it");
+    printf("\nis not possible to change characters already entered! It's not for manually");
+    printf("\nentering characters but pasting larger portions of input. At the end of the");
+    printf("\ninput don't hit Enter but ^C (ctrl-c) to correctly terminate!\n");
+    printf("\nEnter nothing and terminate to keep old");
+    if (type == REG_MULTI_SZ) {
+      printf(" or:\n");
+      printf("'--n' to quit (remove rest of strings)\n");
+      printf("'--i' insert new string at this point\n");
+      printf("'--q' to quit (leaving remaining strings as is)\n");
+      printf("'--Q' to quit and discard all changes\n");
+      printf("'--e' for empty string in this position");
+    }
+    printf(".\n\n");
+    n = 0; i = 0; in = 0; go = 0; done = 0;
+
+    /* Now this one is RATHER UGLY :-} */
+
+    while (i < (len>>1)-1 || !done) {
+      printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
+      if (insert) insert++;
+      if (!go) fmyncinput("-> ",inbuf);
+      else *inbuf = 0;
+      if (*inbuf && strcmp("--q", inbuf)) {
+	if (!strcmp("--n", inbuf) || !strcmp("--Q", inbuf)) { /* Zap rest */
+	  i = (len>>1) ; done = 1;
+	} else if (strcmp("--i", inbuf)) {  /* Copy out given string */
+	  if (!strcmp("--e",inbuf)) *inbuf = '\0';
+	  if (newstring) newstring = realloc(newstring, in+strlen(inbuf)+1);
+	  else newstring = malloc(in+strlen(inbuf)+1);
+	  strcpy(newstring+in, inbuf);
+	  in += strlen(inbuf)+1;
+	} else {
+	  insert = 1;
+	}
+      } else {  /* Copy out default string */
+
+	if (newstring) newstring = realloc(newstring, in+strlen(origstring+i)+1);
+	else newstring = malloc(in + strlen(origstring+i) + 1);
+	strcpy(newstring+in, origstring+i);
+	in += strlen(origstring+i)+1;
+
+	if (!strcmp("--q", inbuf)) {
+	  go = 1; done = 1;
+	  if (!(i < (len>>1)-1 )) {
+	    in--;  /* remove last empty if in NEW-mode */
+	  }
+	}
+      }
+
+      if (!insert) i += strlen(origstring+i) + 1;
+      if (insert != 1) n++;
+      if (insert == 2) insert = 0;
+      if (type != REG_MULTI_SZ) {
+	i = (len<<1);
+	done = 1;
+      }
+
+    }
+
+    if (strcmp("--Q", inbuf)) {  /* We didn't bail out */
+      if (newstring) newstring = realloc(newstring, in+1);
+      else newstring = malloc(in+1);
+
+
+      if (type == REG_MULTI_SZ) {
+	*(newstring+in) = '\0';  /* Must add null termination */
+	in++;
+      }
+
+      ALLOC(newkv,1,(in<<1)+sizeof(int));
+
+      newkv->len = in<<1;
+      VERBF(h,"newkv->len: %d\n",newkv->len);
+      cheap_ascii2uni(newstring, (char *)&(newkv->data), in);
+
+      d = 1;
+
+      FREE(kv);
+      kv = newkv;
+
+    }
+    break;
+
+  default:
+    printf("Type not handeled (yet), invoking hex editor on data!\n");
+  case REG_BINARY:
+    fmyinput("New length (ENTER to keep same): ",inbuf,90);
+    if (*inbuf) {
+      newsize = atoi(inbuf);
+      ALLOC(newkv,1,newsize+sizeof(int)+4);
+      bzero(newkv,newsize+sizeof(int)+4);
+      memcpy(newkv, kv, ((len < newsize) ? (len) : (newsize)) + sizeof(int));
+      FREE(kv);
+      kv = newkv;
+      kv->len = newsize;
+    }
+    d = debugit((char *)&kv->data, kv->len);
+    break;
+  }
+
+  if (d) {
+    if (!(put_buf2val(h, kv, nkofs, path, type, TPF_VK))) {
+      printf("Failed to set value!?\n");
+    }
+  }
+  FREE(kv);
 }
 
 /* Edit value: Invoke whatever is needed to edit it
@@ -520,6 +681,7 @@ void regedit_interactive(struct hive *hive[], int no_hives)
 	printf("nk <keyname>           - add key\n");
 	printf("dk <keyname>           - delete key (must be empty)\n");
 	printf("ed <value>             - Edit value\n");
+	printf("en <value>             - Edit value in non-canonical mode (>%d characters)\n", SZ_MAX-1);
 	printf("nv <type#> <valuename> - Add value\n");
 	printf("dv <valuename>         - Delete value\n");
 	printf("delallv                - Delete all values in current key\n");
@@ -610,6 +772,11 @@ void regedit_interactive(struct hive *hive[], int no_hives)
 	bp++;
 	skipspace(&bp);
         edit_val(hdesc, cdofs+4, bp);
+	break;
+      case MCMD_NCEDIT :
+	bp++;
+	skipspace(&bp);
+        ncedit_val(hdesc, cdofs+4, bp);
 	break;
       case MCMD_HIVE :
 	bp++;

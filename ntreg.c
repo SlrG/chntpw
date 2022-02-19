@@ -81,6 +81,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <termios.h>
 
 #include "ntreg.h"
 
@@ -89,6 +90,8 @@
 
 #define ZEROFILL      1  /* Fill blocks with zeroes when allocating and deallocating */
 #define ZEROFILLONLOAD  0  /* Fill blocks marked as unused/deallocated with zeroes on load. FOR DEBUG */
+
+#define MAXLINE 256000
 
 const char ntreg_version[] = "ntreg lib routines, v0.95 140201, (c) Petter N Hagen";
 
@@ -224,6 +227,60 @@ char *mem_str( const char *str, int len )
     return str_new;
 }
 
+
+int fmyncinput(char *prmpt, char *ibuf)
+{
+
+   printf("%s",prmpt);
+
+   struct termios tty_opts_backup, tty_opts_raw;
+
+   if (!isatty(STDIN_FILENO)) {
+     printf("Error: stdin is not a TTY\n");
+     exit(1);
+   }
+
+   // backup TTY settings
+   tcgetattr(STDIN_FILENO, &tty_opts_backup);
+
+   // change TTY settings to raw mode
+   cfmakeraw(&tty_opts_raw);
+   tcsetattr(STDIN_FILENO, TCSANOW, &tty_opts_raw);
+
+   char *str = calloc(1,1), *tmp;
+   size_t x = 1;
+   int c;
+
+   if (!str)
+   {
+      perror("Failed to allocate string buffer.");
+      exit(EXIT_FAILURE);
+   }
+
+   while ((c = fgetc(stdin)) != EOF && c != 3 )
+   {
+      tmp = realloc(str, x+1);
+      if (!tmp)
+      {
+         // str is still valid
+         perror("Failed to resize string buffer.");
+         break;
+      }
+
+      str = tmp;
+      str[x - 1] = c;
+      printf ("%c", c);
+      str[x++] = 0;
+   }
+
+   // Restore previous TTY settings
+   tcsetattr(STDIN_FILENO, TCSANOW, &tty_opts_backup);
+
+   strcpy (ibuf, str);
+   free (str);
+
+   return(strlen(ibuf));
+}
 
 int fmyinput(char *prmpt, char *ibuf, int maxlen)
 {
@@ -3498,8 +3555,6 @@ void export_key(struct hive *hdesc, int nkofs, char *name, char *filename, char 
 /* ================================================================ */
 
 /* Import from .reg file routines */
-
-#define MAXLINE 256000
 
 /* Wide character fgetsw() may not be available on all small libraries..
  * so.. roll our own fgets() that handles wide if needed

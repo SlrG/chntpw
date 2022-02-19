@@ -390,6 +390,7 @@ char *str_dup( const char *str );
 char *str_cat(char *str, char *add);
 char *str_catf(char *str, const char *format, ... );
 int fmyinput(char *prmpt, char *ibuf, int maxlen);
+int fmyncinput(char *prmpt, char *ibuf);
 void hexprnt(char *s, unsigned char *bytes, int len);
 void hexdump(char *hbuf, int start, int stop, int ascii);
 int find_in_buf(char *buf, char *what, int sz, int len, int start);
