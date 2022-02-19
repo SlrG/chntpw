@@ -300,7 +300,11 @@ void ncedit_val(struct hive *h, int nkofs, char *path)
     cheap_uni2ascii(dbuf,origstring,len);
     n = 0; i = 0;
     while (i < (len>>1)-1) {
-      printf("[%2d]: %s\n",n,origstring+i);
+      if (strlen(origstring) > 75) {
+        printf("[%2d]: %.32s ... ", n, origstring+1);
+        printf("%s\n", origstring+strlen(origstring)-32);
+      }
+      //printf("[%2d]: %s\n",n,origstring+i);
       i += strlen(origstring+i) + 1;
       n++;
     }
@@ -324,7 +328,11 @@ void ncedit_val(struct hive *h, int nkofs, char *path)
     /* Now this one is RATHER UGLY :-} */
 
     while (i < (len>>1)-1 || !done) {
-      printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
+      if (strlen(origstring) > 70) {
+        printf("[%2d]: %.32s ... ", n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
+        printf("%s\n", origstring+strlen(origstring)-32);
+      }
+      //printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
       if (insert) insert++;
       if (!go) fmyncinput("-> ",inbuf);
       else *inbuf = 0;
@@ -470,7 +478,11 @@ void edit_val(struct hive *h, int nkofs, char *path)
     cheap_uni2ascii(dbuf,origstring,len);
     n = 0; i = 0;
     while (i < (len>>1)-1) {
-      printf("[%2d]: %s\n",n,origstring+i);
+      if (strlen(origstring) > 75) {
+        printf("[%2d]: %.32s ... ", n, origstring+1);
+        printf("%s\n", origstring+strlen(origstring)-32);
+      }
+      //printf("[%2d]: %s\n",n,origstring+i);
       i += strlen(origstring+i) + 1;
       n++;
     }
@@ -491,8 +503,11 @@ void edit_val(struct hive *h, int nkofs, char *path)
     /* Now this one is RATHER UGLY :-} */
 
     while (i < (len>>1)-1 || !done) {
-
-      printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
+      if (strlen(origstring) > 70) {
+        printf("[%2d]: %.32s ... ", n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
+        printf("%s\n", origstring+strlen(origstring)-32);
+      }
+      //printf("[%2d]: %s\n",n, insert == 1 ? "[INSERT]" : ((i < (len>>1)-1 ) ? origstring+i : "[NEW]"));
       if (insert) insert++;
       if (!go) fmyinput("-> ",inbuf, SZ_MAX);
       else *inbuf = 0;
